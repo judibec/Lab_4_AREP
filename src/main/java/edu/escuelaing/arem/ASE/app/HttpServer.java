@@ -2,11 +2,14 @@ package edu.escuelaing.arem.ASE.app;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import edu.escuelaing.arem.ASE.app.controller.RequestMapping;
 import edu.escuelaing.arem.ASE.app.services.FirstWebApp;
 import edu.escuelaing.arem.ASE.app.services.RestService;
 import edu.escuelaing.arem.ASE.app.spark.Response;
 import edu.escuelaing.arem.ASE.app.spark.Spark;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.*;
 import java.io.*;
 import java.util.*;
@@ -16,7 +19,7 @@ import java.util.*;
  */
 public class HttpServer {
     private static HttpServer instance = new HttpServer();
-    private Map<String,RestService> services = new HashMap<>();
+    private Map<String,Method> services = new HashMap<>();
     private Response res;
 
     private HttpServer(){}
@@ -25,7 +28,17 @@ public class HttpServer {
         return instance;
     }
 
-    public void run(String[] args) throws IOException {
+    public void run(String[] args) throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
+        String className = args[0];
+        Class c = Class.forName(className);
+        Method[] m = c.getMethods();
+        for (Method me: m){
+            if(me.isAnnotationPresent(RequestMapping.class)){
+                String key = me.getAnnotation(RequestMapping.class).value();
+                services.put(key,me);
+            }
+        }
+
         ServerSocket serverSocket = null;
         try {
             serverSocket = new ServerSocket(34000);
@@ -67,19 +80,22 @@ public class HttpServer {
                 }
             }
             if (Objects.equals(verb, "GET")) {
-                if (Spark.cache.containsKey(request)) {
-                    outputLine = Spark.cache.get(request).getResponse();
-                } else if (!Spark.cache.containsKey(request) && !request.contains("favicon")) {
-                    outputLine = Spark.setCache(request);
+                if(services.containsKey(request)){
+                    outputLine = services.get(request).invoke(null).toString();
                 }
-            }else if (Objects.equals(verb, "POST")) {
-                if(!request.contains("favicon")){
-                    String value = request.split("=")[1];
-                    String key = request.split("=")[0];
-                    key = key.split("\\?")[1];
-                    outputLine = Spark.post(value,key);
-
-                }
+//                if (Spark.cache.containsKey(request)) {
+//                    outputLine = Spark.cache.get(request).getResponse();
+//                } else if (!Spark.cache.containsKey(request) && !request.contains("favicon")) {
+//                    outputLine = Spark.setCache(request);
+//                }
+//            }else if (Objects.equals(verb, "POST")) {
+//                if(!request.contains("favicon")){
+//                    String value = request.split("=")[1];
+//                    String key = request.split("=")[0];
+//                    key = key.split("\\?")[1];
+//                    outputLine = Spark.post(value,key);
+//
+//                }
             }
             else if(!Objects.equals(title, "")){
                 outputLine = APIanswer(title);
