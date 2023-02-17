@@ -54,3 +54,9 @@ Se contruyo una interfaz funcional la cual permite la creacion de las funciones 
 
 ## TEST
 
+![image](https://user-images.githubusercontent.com/90010884/219522822-847735c0-830f-47e7-a9cf-8fe0a1b8999c.png)
+![image](https://user-images.githubusercontent.com/90010884/219522832-d33ec348-7629-49e7-89af-128f90032199.png)
+![image](https://user-images.githubusercontent.com/90010884/219522848-bb02b19a-5506-4042-a32d-41bcd889ebe7.png)
+![image](https://user-images.githubusercontent.com/90010884/219522861-4e736b9d-19f5-4fd6-8d2a-4aa4e2620fff.png)
+
+
