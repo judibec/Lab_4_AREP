@@ -55,3 +55,9 @@ Los patrones usados son singleton y adaptador
 
 ## TEST
 
+![image](https://user-images.githubusercontent.com/90010884/221025138-53f56de4-8cb9-46b5-a3d5-a18c675f9035.png)
+![image](https://user-images.githubusercontent.com/90010884/221025152-4974e4b8-27fb-4912-b123-e23617e505a2.png)
+![image](https://user-images.githubusercontent.com/90010884/221025167-bd00d991-3ff7-4937-a7a8-d5a4cd17257a.png)
+
+
+
