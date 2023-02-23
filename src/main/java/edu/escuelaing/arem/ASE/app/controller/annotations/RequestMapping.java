@@ -1,4 +1,4 @@
-package edu.escuelaing.arem.ASE.app.controller;
+package edu.escuelaing.arem.ASE.app.controller.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

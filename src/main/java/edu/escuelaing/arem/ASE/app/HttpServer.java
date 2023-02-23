@@ -1,12 +1,8 @@
 package edu.escuelaing.arem.ASE.app;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import edu.escuelaing.arem.ASE.app.controller.RequestMapping;
-import edu.escuelaing.arem.ASE.app.services.FirstWebApp;
-import edu.escuelaing.arem.ASE.app.services.RestService;
+import edu.escuelaing.arem.ASE.app.controller.annotations.Component;
+import edu.escuelaing.arem.ASE.app.controller.annotations.RequestMapping;
 import edu.escuelaing.arem.ASE.app.spark.Response;
-import edu.escuelaing.arem.ASE.app.spark.Spark;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -21,6 +17,8 @@ public class HttpServer {
     private static HttpServer instance = new HttpServer();
     private Map<String,Method> services = new HashMap<>();
     private Response res;
+    private static OutputStream outputStream = null;
+    private final String root = "edu/escuelaing/arem/ASE/app/controller";
 
     private HttpServer(){}
 
@@ -29,14 +27,20 @@ public class HttpServer {
     }
 
     public void run(String[] args) throws IOException, ClassNotFoundException, InvocationTargetException, IllegalAccessException {
-        String className = args[0];
-        Class c = Class.forName(className);
-        Method[] m = c.getMethods();
-        for (Method me: m){
-            if(me.isAnnotationPresent(RequestMapping.class)){
-                String key = me.getAnnotation(RequestMapping.class).value();
-                services.put(key,me);
+//        String className = args[0];
+        List<Class<?>> classes = getClasses();
+        for (Class<?> clasS:classes){
+            if(clasS.isAnnotationPresent(Component.class)){
+                Class<?> c = Class.forName(clasS.getName());
+                Method[] m = c.getMethods();
+                for (Method me: m){
+                    if(me.isAnnotationPresent(RequestMapping.class)){
+                        String key = me.getAnnotation(RequestMapping.class).value();
+                        services.put(key,me);
+                    }
+                }
             }
+
         }
 
         ServerSocket serverSocket = null;
@@ -64,8 +68,9 @@ public class HttpServer {
             boolean firs_line = true;
             String request = "/simple";
             String verb = "";
+            outputStream = clientSocket.getOutputStream();
             while ((inputLine = in.readLine()) != null) {
-                System.out.println("Received: " + inputLine);
+//                System.out.println("Received: " + inputLine);
                 if(firs_line){
                     request = inputLine.split(" ")[1];
                     verb = inputLine.split(" ")[0];
@@ -80,6 +85,7 @@ public class HttpServer {
                 }
             }
             if (Objects.equals(verb, "GET")) {
+                System.out.println(request);
                 if(services.containsKey(request)){
                     outputLine = services.get(request).invoke(null).toString();
                 }
@@ -133,6 +139,10 @@ public class HttpServer {
 
     }
 
+    public OutputStream getOutputStream() {
+        return outputStream;
+    }
+
     private static String htmlOriginal(){
         return "HTTP/1.1 200 OK\r\n"
                 + "Content-Type: text/html\r\n"
@@ -181,15 +191,32 @@ public class HttpServer {
                 createTable(Cache.findTitle(title));
     }
 
-//    private String execute(String serviceName){
-//        res.setPath("src/main/resources"+serviceName);
-//        String type = serviceName.split("\\.")[1];
-//        res.setType(type);
-//        return serviceName;
-//    }
-//
-//    public void addServices(String key, RestService service){
-//        services.put(key,service);
-//    }
+    private List<Class<?>> getClasses(){
+        List<Class<?>> classes = new ArrayList<>();
+        try{
+            for (String cp: classPaths()){
+                File file = new File(cp + "/" + root);
+                if(file.exists() && file.isDirectory()){
+                    for (File cf: Objects.requireNonNull(file.listFiles())){
+                        if(cf.isFile() && cf.getName().endsWith(".class")){
+                            String rootTemp = root.replace("/",".");
+                            String className = rootTemp+"."+cf.getName().replace(".class","");
+                            Class<?> clasS =  Class.forName(className);
+                            classes.add(clasS);
+                        }
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return classes;
+    }
+
+    private ArrayList<String> classPaths(){
+        String classPath = System.getProperty("java.class.path");
+        String[] classPaths =  classPath.split(System.getProperty("path.separator"));
+        return new ArrayList<>(Arrays.asList(classPaths));
+    }
 
 }
